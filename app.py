@@ -3,6 +3,8 @@ import asyncio
 from playwright.async_api import async_playwright
 import pandas as pd
 import json
+import re
+from urllib.parse import urljoin
 
 # Configuración de la página
 st.set_page_config(
@@ -19,7 +21,7 @@ st.markdown("Busca palabras clave en tus sitios de noticias favoritos en tiempo 
 if "sitios" not in st.session_state:
     st.session_state["sitios"] = ["https://www.emol.com/", "https://www.lun.com/"]
 if "palabras" not in st.session_state:
-    st.session_state["palabras"] = ["Alexis Sanchez", "China", "tecnologia", "IA"]
+    st.session_state["palabras"] = ["Alexis Sanchez", "Elon Musk", "terremoto"]
 
 # --- SECCIÓN DE CONFIGURACIÓN ---
 st.sidebar.header("🛠️ Configuración de Búsqueda")
@@ -80,10 +82,13 @@ async def escanear_sitio(url, palabras_clave, status_placeholder):
             total_encontrados_sitio = 0
             
             for enlace in enlaces:
-                texto = await enlace.inner_text()
-                texto = texto.strip()
+                texto_original = await enlace.inner_text()
                 
-                if len(texto) < 10:
+                # 🚀 CORRECCIÓN CLAVE: Reemplaza saltos de línea (\n), tabulaciones (\t) 
+                # y múltiples espacios continuos por un único espacio en blanco estándar.
+                texto_limpio = re.sub(r'\s+', ' ', texto_original).strip()
+                
+                if len(texto_limpio) < 10:
                     continue
                     
                 href = await enlace.get_attribute("href")
@@ -91,22 +96,26 @@ async def escanear_sitio(url, palabras_clave, status_placeholder):
                 if href:
                     # Formatear URLs relativas a absolutas
                     if href.startswith("/"):
-                        from urllib.parse import urljoin
                         href = urljoin(url, href)
                     elif not href.startswith("http"):
                         continue 
                     
-                    # 🚀 CONTROL DE DUPLICADOS: Si el enlace ya fue procesado, se descarta inmediatamente
+                    # CONTROL DE DUPLICADOS: Si el enlace ya fue procesado, se descarta inmediatamente
                     if href in enlaces_procesados:
                         continue
 
                     # Evaluar coincidencia de palabras clave
                     for palabra in palabras_clave:
-                        if palabra.lower() in texto.lower():
+                        palabra_limpia = palabra.strip()
+                        if not palabra_limpia:
+                            continue
+                            
+                        # Comparación insensible a mayúsculas/minúsculas sobre el texto normalizado
+                        if palabra_limpia.lower() in texto_limpio.lower():
                             resultados.append({
                                 "Sitio": url,
-                                "Titular": texto,
-                                "Palabra Coincidente": palabra,
+                                "Titular": texto_limpio, # Guardamos el titular limpio y legible
+                                "Palabra Coincidente": palabra_limpia,
                                 "Enlace": href
                             })
                             enlaces_procesados.add(href)  # Registrar el enlace para evitar que se repita
@@ -120,6 +129,7 @@ async def escanear_sitio(url, palabras_clave, status_placeholder):
     except Exception as e:
         status_placeholder.error(f"❌ Error al escanear {url}: {str(e)}")
         return []
+
 
 # --- PANEL PRINCIPAL Y BOTÓN DE INICIO ---
 st.subheader("🚀 Control de Extracción")
