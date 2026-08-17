@@ -1,0 +1,5 @@
+# Antes de ejecutar, se debe correr este comando:
+ playwright install
+
+# Ejecutar: 
+streamlit run app.py
