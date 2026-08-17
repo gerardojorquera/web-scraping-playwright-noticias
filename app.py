@@ -8,21 +8,18 @@ from urllib.parse import urljoin
 import os
 import subprocess
 
-# 🚀 CONFIGURACIÓN DE RUTA ABSOLUTA PARA ENTORNOS EN LA NUBE
+# 🚀 CONFIGURACIÓN DE RUTA ABSOLUTA PARA STREAMLIT CLOUD
 os.environ["PLAYWRIGHT_BROWSERS_PATH"] = os.path.join(os.getcwd(), "pw-browsers")
 
 @st.cache_resource
 def iniciar_entorno_playwright():
     ruta_navegador = os.environ["PLAYWRIGHT_BROWSERS_PATH"]
     
-    # Si la carpeta del navegador no existe, procedemos a realizar la instalación completa
+    # Descarga el navegador Chromium de forma aislada en la carpeta del proyecto
     if not os.path.exists(ruta_navegador):
-        with st.spinner("🔧 Configurando librerías y binarios de Chromium (esto tomará cerca de un minuto)..."):
-            # 1. Descarga el navegador Chromium en la ruta personalizada
+        with st.spinner("🔧 Descargando binarios de Chromium (esto tomará cerca de un minuto)..."):
+            # check=True lanzará error controlado si falla, pero este comando no requiere sudo
             subprocess.run(["playwright", "install", "chromium"], env=os.environ, check=True)
-            
-            # 2. 🌟 SOLUCIÓN CLAVE: Instala las dependencias y librerías del sistema de Linux faltantes
-            subprocess.run(["playwright", "install-deps"], env=os.environ, check=True)
             
 iniciar_entorno_playwright()
 
@@ -92,7 +89,17 @@ async def escanear_sitio(url, palabras_clave, status_placeholder):
     
     try:
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            # browser = await p.chromium.launch(headless=True)
+            # Launch optimizado para contenedores Linux sin librerías gráficas del sistema
+            browser = await p.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu"
+                ]
+            )
             page = await browser.new_page()
             
             await page.goto(url, wait_until="domcontentloaded", timeout=30000)
