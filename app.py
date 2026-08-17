@@ -8,24 +8,21 @@ from urllib.parse import urljoin
 import os
 import subprocess
 
-# 🚀 TRUCO DE DESPLIEGUE: Instalar navegadores de Playwright de forma automática si no existen
-@st.cache_resource
-def verificar_e_instalar_navegadores():
-    try:
-        # Intentamos verificar si funciona el comando básico de playwright
-        import playwright
-    except ImportError:
-        return
-        
-    # Comprobar si existe la carpeta de caché del navegador
-    cache_dir = os.path.expanduser("~/.cache/ms-playwright")
-    if not os.path.exists(cache_dir):
-        with st.spinner("🔧 Configurando entorno del navegador por primera vez (esto tardará un minuto)..."):
-            # Forzamos la instalación del binario liviano de Chromium necesario
-            subprocess.run(["playwright", "install", "chromium"])
+# 🚀 CONFIGURACIÓN DE RUTA PARA STREAMLIT CLOUD
+# Forzamos a Playwright a instalar y buscar el navegador dentro de la carpeta del proyecto
+os.environ["PLAYWRIGHT_BROWSERS_PATH"] = os.path.join(os.getcwd(), "pw-browsers")
 
-# Ejecutar la verificación antes de cualquier proceso de scraping
-verificar_e_instalar_navegadores()
+@st.cache_resource
+def iniciar_entorno_playwright():
+    ruta_navegador = os.environ["PLAYWRIGHT_BROWSERS_PATH"]
+    
+    # Si la carpeta del navegador no existe, procedemos a descargarla
+    if not os.path.exists(ruta_navegador):
+        with st.spinner("🔧 Descargando binarios de Chromium en el servidor (esto tomará un minuto)..."):
+            # Instalamos las dependencias del sistema y el navegador Chromium en la ruta personalizada
+            subprocess.run(["playwright", "install", "chromium"], env=os.environ, check=True)
+            
+iniciar_entorno_playwright()
 
 # Configuración de la página
 st.set_page_config(
