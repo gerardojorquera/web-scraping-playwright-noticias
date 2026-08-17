@@ -5,6 +5,27 @@ import pandas as pd
 import json
 import re
 from urllib.parse import urljoin
+import os
+import subprocess
+
+# 🚀 TRUCO DE DESPLIEGUE: Instalar navegadores de Playwright de forma automática si no existen
+@st.cache_resource
+def verificar_e_instalar_navegadores():
+    try:
+        # Intentamos verificar si funciona el comando básico de playwright
+        import playwright
+    except ImportError:
+        return
+        
+    # Comprobar si existe la carpeta de caché del navegador
+    cache_dir = os.path.expanduser("~/.cache/ms-playwright")
+    if not os.path.exists(cache_dir):
+        with st.spinner("🔧 Configurando entorno del navegador por primera vez (esto tardará un minuto)..."):
+            # Forzamos la instalación del binario liviano de Chromium necesario
+            subprocess.run(["playwright", "install", "chromium"])
+
+# Ejecutar la verificación antes de cualquier proceso de scraping
+verificar_e_instalar_navegadores()
 
 # Configuración de la página
 st.set_page_config(
