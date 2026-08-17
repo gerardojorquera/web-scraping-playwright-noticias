@@ -8,19 +8,21 @@ from urllib.parse import urljoin
 import os
 import subprocess
 
-# 🚀 CONFIGURACIÓN DE RUTA PARA STREAMLIT CLOUD
-# Forzamos a Playwright a instalar y buscar el navegador dentro de la carpeta del proyecto
+# 🚀 CONFIGURACIÓN DE RUTA ABSOLUTA PARA ENTORNOS EN LA NUBE
 os.environ["PLAYWRIGHT_BROWSERS_PATH"] = os.path.join(os.getcwd(), "pw-browsers")
 
 @st.cache_resource
 def iniciar_entorno_playwright():
     ruta_navegador = os.environ["PLAYWRIGHT_BROWSERS_PATH"]
     
-    # Si la carpeta del navegador no existe, procedemos a descargarla
+    # Si la carpeta del navegador no existe, procedemos a realizar la instalación completa
     if not os.path.exists(ruta_navegador):
-        with st.spinner("🔧 Descargando binarios de Chromium en el servidor (esto tomará un minuto)..."):
-            # Instalamos las dependencias del sistema y el navegador Chromium en la ruta personalizada
+        with st.spinner("🔧 Configurando librerías y binarios de Chromium (esto tomará cerca de un minuto)..."):
+            # 1. Descarga el navegador Chromium en la ruta personalizada
             subprocess.run(["playwright", "install", "chromium"], env=os.environ, check=True)
+            
+            # 2. 🌟 SOLUCIÓN CLAVE: Instala las dependencias y librerías del sistema de Linux faltantes
+            subprocess.run(["playwright", "install-deps"], env=os.environ, check=True)
             
 iniciar_entorno_playwright()
 
