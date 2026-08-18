@@ -73,14 +73,14 @@ async def escanear_sitio(url, palabras_clave, status_placeholder):
     try:
         async with async_playwright() as p:
             browser = await p.chromium.launch(
+                executable_path="/usr/bin/chromium",
                 headless=True,
                 args=[
                     "--no-sandbox",
-                    "--disable-setuid-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-gpu"
+                    "--disable-dev-shm-usage"
                 ]
             )
+
             page = await browser.new_page()
             
             await page.goto(url, wait_until="domcontentloaded", timeout=30000)
