@@ -20,9 +20,9 @@ st.markdown("Busca palabras clave en tus sitios de noticias favoritos en tiempo 
 
 # Inicializar estado para guardar la configuración de forma persistente en la sesión
 if "sitios" not in st.session_state:
-    st.session_state["sitios"] = ["https://www.emol.com/", "https://www.lun.com/"]
+    st.session_state["sitios"] = ["https://www.emol.com/", "https://www.biobiochile.cl/", "https://www.24horas.cl/"]
 if "palabras" not in st.session_state:
-    st.session_state["palabras"] = ["Shanghai", "Elon Musk", "Alexis Sanchez", "Terremoto", "Boric", "Ivette Vergara"]
+    st.session_state["palabras"] = ["Trump", "Terremoto", "Colombia", "Ormuz"]
 
 # --- SECCIÓN DE CONFIGURACIÓN ---
 st.sidebar.header("🛠️ Configuración de Búsqueda")
@@ -36,7 +36,7 @@ sitios_input = st.sidebar.text_area(
 
 st.sidebar.subheader("Palabras Clave")
 palabras_input = st.sidebar.text_area(
-    "Ingresa las palabras clave o frases compuestas (una por línea):",
+    "Ingresa SOLO palabras clave (una por línea):",
     value="\n".join(st.session_state["palabras"]),
     height=120
 )
